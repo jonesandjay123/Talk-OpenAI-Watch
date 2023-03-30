@@ -20,6 +20,14 @@
             android:layout_height="wrap_content"
             android:text="@string/hello_world" />
 
+        <!-- 新添加的 TextView，顯示回答 -->
+        <TextView
+            android:id="@+id/text_answer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="這是回答" />
+
         <!-- 新添加的 TextView，顯示版本號碼 -->
         <TextView
             android:id="@+id/version_text"

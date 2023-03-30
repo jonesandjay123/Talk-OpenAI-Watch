@@ -62,7 +62,9 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             val results = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
             if (!results.isNullOrEmpty()) {
                 val recognizedText = results[0]
-                binding.text.text = recognizedText
+
+                // 在文字前加上 "問：" 並更新 TextView 的文本
+                binding.text.text = "問：$recognizedText"
 
                 // 根據識別出的語言更新 TextToSpeech 的語言設置
                 val locale = if (recognizedText.matches(Regex("[\\u4E00-\\u9FA5]+"))) {
@@ -71,6 +73,9 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                     Locale.US
                 }
                 textToSpeech.language = locale
+
+                val answerTextView = findViewById<TextView>(R.id.text_answer)
+                answerTextView.text = "答: "
 
                 // 使用 postDelayed 來給語音識別一點時間完成處理
                 binding.text.postDelayed({
