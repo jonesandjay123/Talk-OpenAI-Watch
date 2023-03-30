@@ -26,6 +26,9 @@ class MainActivity : Activity() {
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
         val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo)
         versionTextView.text = "版本 $versionCode"
+
+        // 為根視圖添加單擊監聽器
+        binding.root.setOnClickListener { onScreenTapped(it) }
     }
 
     fun onScreenTapped(view: View) {
