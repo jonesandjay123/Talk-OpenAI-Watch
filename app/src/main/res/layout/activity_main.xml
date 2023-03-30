@@ -12,14 +12,21 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="@dimen/inner_frame_layout_padding"
-        app:layout_boxedEdges="all"
-        android:onClick="onScreenTapped">
+        app:layout_boxedEdges="all">
 
         <TextView
             android:id="@+id/text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/hello_world" />
+
+        <!-- 新添加的 TextView，顯示版本號碼 -->
+        <TextView
+            android:id="@+id/version_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:text="版本號碼" />
 
     </FrameLayout>
 </androidx.wear.widget.BoxInsetLayout>

@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.view.View
+import android.widget.TextView
+import androidx.core.content.pm.PackageInfoCompat
 import com.example.talkopenaiwatch.databinding.ActivityMainBinding
 
 class MainActivity : Activity() {
@@ -18,6 +20,12 @@ class MainActivity : Activity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // 將版本號碼設置為 TextView
+        val versionTextView = findViewById<TextView>(R.id.version_text)
+        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo)
+        versionTextView.text = "版本 $versionCode"
     }
 
     fun onScreenTapped(view: View) {
