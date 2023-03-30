@@ -1,49 +1,48 @@
 package com.example.talkopenaiwatch
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
-import android.speech.tts.TextToSpeech
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.view.View
 import com.example.talkopenaiwatch.databinding.ActivityMainBinding
-import java.util.*
 
-class MainActivity : Activity(), TextToSpeech.OnInitListener {
+class MainActivity : Activity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var textToSpeech: TextToSpeech
+    private val speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+    }
 
-        textToSpeech = TextToSpeech(this, this)
+    fun onScreenTapped(view: View) {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Say your question")
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-TW") // 繁體中文
+        }
+        startActivityForResult(intent, 100)
+    }
 
-        binding.root.setOnClickListener {
-            onScreenTapped(it)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == 100 && resultCode == RESULT_OK) {
+            val results = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            if (!results.isNullOrEmpty()) {
+                val recognizedText = results[0]
+                binding.text.text = recognizedText
+            }
         }
     }
 
     override fun onDestroy() {
-        textToSpeech.stop()
-        textToSpeech.shutdown()
         super.onDestroy()
-    }
-
-    override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS) {
-            textToSpeech.language = Locale.US
-        } else {
-            // Handle the error.
-        }
-    }
-
-    fun onScreenTapped(view: View) {
-        speakText("Say your question")
-    }
-
-    private fun speakText(text: String) {
-        textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        speechRecognizer.destroy()
     }
 }
