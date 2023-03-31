@@ -51,7 +51,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         val versionName = packageInfo.versionName
         versionTextView.text = "版本 $versionName"
 
-        binding.root.setOnClickListener { onScreenTapped(it) }
+        binding.touchableScrollView.onClickListener = { onScreenTapped(it) }
     }
 
     private fun onScreenTapped(view: View) {

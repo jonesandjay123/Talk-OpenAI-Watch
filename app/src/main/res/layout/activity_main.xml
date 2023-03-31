@@ -14,27 +14,43 @@
         android:padding="@dimen/inner_frame_layout_padding"
         app:layout_boxedEdges="all">
 
-        <TextView
-            android:id="@+id/text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hello_world" />
+        <com.example.talkopenaiwatch.TouchableScrollView
+            android:id="@+id/touchableScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
 
-        <!-- 新添加的 TextView，顯示回答 -->
-        <TextView
-            android:id="@+id/text_answer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="這是回答" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
 
-        <!-- 新添加的 TextView，顯示版本號碼 -->
-        <TextView
-            android:id="@+id/version_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            android:text="版本號碼" />
+                <TextView
+                    android:id="@+id/text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/hello_world" />
 
+                <TextView
+                    android:id="@+id/text_answer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_gravity="center"
+                    android:text="這是回答" />
+
+
+                <!-- 新添加的 TextView，顯示版本號碼 -->
+                <TextView
+                    android:id="@+id/version_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:text="版本號碼" />
+
+            </LinearLayout>
+        </com.example.talkopenaiwatch.TouchableScrollView>
     </FrameLayout>
 </androidx.wear.widget.BoxInsetLayout>
