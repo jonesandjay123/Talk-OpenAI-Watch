@@ -8,7 +8,10 @@ import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.View
 import android.widget.TextView
-import com.aallam.openai.api.completion.CompletionRequest
+import com.aallam.openai.api.BetaOpenAI
+import com.aallam.openai.api.chat.ChatCompletionRequest
+import com.aallam.openai.api.chat.ChatMessage
+import com.aallam.openai.api.chat.ChatRole
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.OpenAI
 import com.example.talkopenaiwatch.databinding.ActivityMainBinding
@@ -74,6 +77,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
     }
 
+    @OptIn(BetaOpenAI::class)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -82,7 +86,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             if (!results.isNullOrEmpty()) {
                 val recognizedText = results[0]
 
-                binding.text.text = "Question：$recognizedText"
+                binding.text.text = "問：$recognizedText"
 
                 val locale = when {
                     recognizedText.matches(Regex("[\\u4E00-\\u9FA5]+")) -> Locale.TAIWAN
@@ -94,23 +98,28 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 val openAI = OpenAI(apiKey)
 
                 CoroutineScope(Dispatchers.Main).launch {
-                    val completionRequest = CompletionRequest(
-                        model = ModelId("text-davinci-003"),
-                        prompt = recognizedText,
+                    val chatMessages = listOf(
+                        ChatMessage(role = ChatRole.System, content = "你是一個智能問答助手。"),
+                        ChatMessage(role = ChatRole.User, content = recognizedText)
+                    )
+
+                    val chatCompletionRequest = ChatCompletionRequest(
+                        model = ModelId("gpt-3.5-turbo"),
+                        messages = chatMessages,
                         maxTokens = 50
                     )
-                    val completion = openAI.completion(completionRequest)
-                    val answer = completion.choices.firstOrNull()?.text?.trim()
+                    val completion = openAI.chatCompletion(chatCompletionRequest)
+                    val answer = completion.choices.firstOrNull()?.message?.content?.trim()
 
                     if (answer != null) {
                         val answerTextView = findViewById<TextView>(R.id.text_answer)
-                        answerTextView.text = "Answer: $answer"
+                        answerTextView.text = "答: $answer"
 
                         binding.text.postDelayed({
                             textToSpeech.speak(answer, TextToSpeech.QUEUE_FLUSH, null, null)
                         }, 1000)
                     } else {
-                        binding.textAnswer.text = "Sorry, I can't answer your question!"
+                        binding.textAnswer.text = "抱歉，我無法回答您的問題。"
                     }
                 }
             }
