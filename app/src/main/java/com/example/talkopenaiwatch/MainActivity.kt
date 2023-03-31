@@ -98,16 +98,15 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
                 CoroutineScope(Dispatchers.Main).launch {
                     val maxTokens = 50
-                    val systemMessage = if (locale == Locale.TAIWAN) "你是一個智能問答助手。" else "You are an intelligent question-answering assistant."
-                    val userMessage = if (locale == Locale.TAIWAN) "$recognizedText\n請在 $maxTokens 字以內完成回答。" else "$recognizedText\nPlease complete the answer within $maxTokens words."
+                    val systemMessage = if (locale == Locale.TAIWAN) "你是一個智能問答助手，嚴格的遵守規則，每次僅用 $maxTokens 個字來精簡回答所有問題。" else "You are an intelligent Q&A assistant that strictly follows rules, answering all questions concisely using only $maxTokens words each time."
 
                     val chatMessages = listOf(
                         ChatMessage(role = ChatRole.System, content = systemMessage),
-                        ChatMessage(role = ChatRole.User, content = userMessage)
+                        ChatMessage(role = ChatRole.User, content = recognizedText)
                     )
 
                     val chatCompletionRequest = ChatCompletionRequest(
-                        model = ModelId("gpt-3.5-turbo"),
+                        model = ModelId("gpt-4"),
                         messages = chatMessages,
                         maxTokens = maxTokens
                     )
@@ -117,10 +116,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                     if (answer != null) {
                         val answerTextView = findViewById<TextView>(R.id.text_answer)
                         answerTextView.text = "答: $answer"
-
-                        binding.text.postDelayed({
-                            textToSpeech.speak(answer, TextToSpeech.QUEUE_FLUSH, null, null)
-                        }, 1000)
+                        textToSpeech.speak(answer, TextToSpeech.QUEUE_FLUSH, null, null)
                     } else {
                         binding.textAnswer.text = "抱歉，我無法回答您的問題。"
                     }
