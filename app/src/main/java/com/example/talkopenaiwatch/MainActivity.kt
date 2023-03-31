@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.util.Log
-import android.view.View
 import android.widget.TextView
 import com.aallam.openai.api.BetaOpenAI
 import com.aallam.openai.api.chat.ChatCompletionRequest
@@ -54,13 +53,13 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         val versionName = packageInfo.versionName
         versionTextView.text = "Version $versionName"
 
-        binding.touchableScrollView.onClickListener = { onScreenTapped(it) }
+        binding.buttonAsk.setOnClickListener { onAskButtonClicked() }
     }
 
-    private fun onScreenTapped(view: View) {
+    private fun onAskButtonClicked() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "Tap for question")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "請說出您的問題")
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-TW")
         }
         startActivityForResult(intent, 100)
@@ -104,7 +103,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                     )
 
                     val chatCompletionRequest = ChatCompletionRequest(
-                        model = ModelId("gpt-3.5-turbo"),
+                        model = ModelId("gpt-4"),
                         messages = chatMessages,
                         maxTokens = 50
                     )

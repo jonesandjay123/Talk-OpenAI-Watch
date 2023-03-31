@@ -26,6 +26,14 @@
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
 
+                <!-- 新添加的按鈕，放在屏幕頂部 -->
+                <Button
+                    android:id="@+id/button_ask"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="點擊開始提問"
+                    android:textAllCaps="false" />
+
                 <TextView
                     android:id="@+id/text"
                     android:layout_width="wrap_content"
