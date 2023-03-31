@@ -97,15 +97,19 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 val openAI = OpenAI(apiKey)
 
                 CoroutineScope(Dispatchers.Main).launch {
+                    val maxTokens = 50
+                    val systemMessage = if (locale == Locale.TAIWAN) "你是一個智能問答助手。" else "You are an intelligent question-answering assistant."
+                    val userMessage = if (locale == Locale.TAIWAN) "$recognizedText\n請在 $maxTokens 字以內完成回答。" else "$recognizedText\nPlease complete the answer within $maxTokens words."
+
                     val chatMessages = listOf(
-                        ChatMessage(role = ChatRole.System, content = "你是一個智能問答助手。"),
-                        ChatMessage(role = ChatRole.User, content = recognizedText)
+                        ChatMessage(role = ChatRole.System, content = systemMessage),
+                        ChatMessage(role = ChatRole.User, content = userMessage)
                     )
 
                     val chatCompletionRequest = ChatCompletionRequest(
-                        model = ModelId("gpt-4"),
+                        model = ModelId("gpt-3.5-turbo"),
                         messages = chatMessages,
-                        maxTokens = 50
+                        maxTokens = maxTokens
                     )
                     val completion = openAI.chatCompletion(chatCompletionRequest)
                     val answer = completion.choices.firstOrNull()?.message?.content?.trim()
