@@ -49,7 +49,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         val versionTextView = findViewById<TextView>(R.id.version_text)
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
         val versionName = packageInfo.versionName
-        versionTextView.text = "版本 $versionName"
+        versionTextView.text = "Version $versionName"
 
         binding.touchableScrollView.onClickListener = { onScreenTapped(it) }
     }
@@ -57,7 +57,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private fun onScreenTapped(view: View) {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "請說出您的問題")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Tap for question")
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-TW")
         }
         startActivityForResult(intent, 100)
@@ -82,7 +82,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             if (!results.isNullOrEmpty()) {
                 val recognizedText = results[0]
 
-                binding.text.text = "問：$recognizedText"
+                binding.text.text = "Question：$recognizedText"
 
                 val locale = when {
                     recognizedText.matches(Regex("[\\u4E00-\\u9FA5]+")) -> Locale.TAIWAN
@@ -104,13 +104,13 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
                     if (answer != null) {
                         val answerTextView = findViewById<TextView>(R.id.text_answer)
-                        answerTextView.text = "答: $answer"
+                        answerTextView.text = "Answer: $answer"
 
                         binding.text.postDelayed({
                             textToSpeech.speak(answer, TextToSpeech.QUEUE_FLUSH, null, null)
                         }, 1000)
                     } else {
-                        binding.textAnswer.text = "抱歉，我無法回答您的問題。"
+                        binding.textAnswer.text = "Sorry, I can't answer your question!"
                     }
                 }
             }

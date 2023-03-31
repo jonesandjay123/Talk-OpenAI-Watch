@@ -39,7 +39,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:layout_gravity="center"
-                    android:text="這是回答" />
+                    android:text="--" />
 
 
                 <!-- 新添加的 TextView，顯示版本號碼 -->
@@ -48,7 +48,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom|center_horizontal"
-                    android:text="版本號碼" />
+                    android:text="Version Number" />
 
             </LinearLayout>
         </com.example.talkopenaiwatch.TouchableScrollView>
