@@ -23,19 +23,18 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private lateinit var binding: ActivityMainBinding
     private lateinit var textToSpeech: TextToSpeech
 
-    private fun readApiSecrets(): String? {
-        try {
-            val properties = Properties()
+    private fun readApiSecrets(): String {
+        return try {
             assets.open("secrets.properties").use { inputStream ->
-                properties.load(inputStream)
+                val properties = Properties().apply {
+                    load(inputStream)
+                }
+                properties.getProperty("openai_api_key")
+                    ?: throw IllegalStateException("Failed to find 'openai_api_key' in secrets.properties")
             }
-            val apiKey = properties.getProperty("openai_api_key")
-            Log.d("API_KEY", "API Key: $apiKey")
-            return apiKey
         } catch (e: Exception) {
-            Log.e("MainActivity", "Error reading secrets", e)
+            throw IllegalStateException("Failed to read secrets.properties", e)
         }
-        return null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,14 +43,15 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // 初始化 textToSpeech
+        textToSpeech = TextToSpeech(this, this)
+
         val versionTextView = findViewById<TextView>(R.id.version_text)
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
         val versionName = packageInfo.versionName
         versionTextView.text = "版本 $versionName"
 
         binding.root.setOnClickListener { onScreenTapped(it) }
-
-        textToSpeech = TextToSpeech(this, this)
     }
 
     private fun onScreenTapped(view: View) {
@@ -84,19 +84,18 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
                 binding.text.text = "問：$recognizedText"
 
-                val locale = if (recognizedText.matches(Regex("[\\u4E00-\\u9FA5]+"))) {
-                    Locale.TAIWAN
-                } else {
-                    Locale.US
+                val locale = when {
+                    recognizedText.matches(Regex("[\\u4E00-\\u9FA5]+")) -> Locale.TAIWAN
+                    else -> Locale.US
                 }
                 textToSpeech.language = locale
 
-                val apiKey = readApiSecrets() ?: "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".trim()
+                val apiKey = readApiSecrets()
                 val openAI = OpenAI(apiKey)
 
                 CoroutineScope(Dispatchers.Main).launch {
                     val completionRequest = CompletionRequest(
-                        model = ModelId("text-davinci-002"),
+                        model = ModelId("text-davinci-003"),
                         prompt = recognizedText,
                         maxTokens = 50
                     )
@@ -119,10 +118,10 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     override fun onDestroy() {
-        if (::textToSpeech.isInitialized) {
+        if (::textToSpeech.isInitialized && textToSpeech.isSpeaking) {
             textToSpeech.stop()
-            textToSpeech.shutdown()
         }
+        textToSpeech.shutdown()
         super.onDestroy()
     }
 }
