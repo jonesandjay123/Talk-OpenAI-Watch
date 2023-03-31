@@ -8,13 +8,35 @@ import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.View
 import android.widget.TextView
+import com.aallam.openai.api.completion.CompletionRequest
+import com.aallam.openai.api.model.ModelId
+import com.aallam.openai.client.OpenAI
 import com.example.talkopenaiwatch.databinding.ActivityMainBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Locale
+import java.util.Properties
 
 class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var textToSpeech: TextToSpeech
+
+    private fun readApiSecrets(): String? {
+        try {
+            val properties = Properties()
+            assets.open("secrets.properties").use { inputStream ->
+                properties.load(inputStream)
+            }
+            val apiKey = properties.getProperty("openai_api_key")
+            Log.d("API_KEY", "API Key: $apiKey")
+            return apiKey
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error reading secrets", e)
+        }
+        return null
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,13 +44,11 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 將版本號碼設置為 TextView
         val versionTextView = findViewById<TextView>(R.id.version_text)
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
         val versionName = packageInfo.versionName
         versionTextView.text = "版本 $versionName"
 
-        // 為根視圖添加單擊監聽器
         binding.root.setOnClickListener { onScreenTapped(it) }
 
         textToSpeech = TextToSpeech(this, this)
@@ -38,12 +58,11 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_PROMPT, "請說出您的問題")
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-TW") // 繁體中文
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-TW")
         }
         startActivityForResult(intent, 100)
     }
 
-    // 實現 TextToSpeech.OnInitListener 中的 onInit 方法
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             val result = textToSpeech.setLanguage(Locale.US)
@@ -63,10 +82,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             if (!results.isNullOrEmpty()) {
                 val recognizedText = results[0]
 
-                // 在文字前加上 "問：" 並更新 TextView 的文本
                 binding.text.text = "問：$recognizedText"
 
-                // 根據識別出的語言更新 TextToSpeech 的語言設置
                 val locale = if (recognizedText.matches(Regex("[\\u4E00-\\u9FA5]+"))) {
                     Locale.TAIWAN
                 } else {
@@ -74,25 +91,38 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 }
                 textToSpeech.language = locale
 
-                val answerTextView = findViewById<TextView>(R.id.text_answer)
-                answerTextView.text = "答: "
+                val apiKey = readApiSecrets() ?: "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".trim()
+                val openAI = OpenAI(apiKey)
 
-                // 使用 postDelayed 來給語音識別一點時間完成處理
-                binding.text.postDelayed({
-                    // 朗讀文字
-                    textToSpeech.speak(recognizedText, TextToSpeech.QUEUE_FLUSH, null, "")
-                }, 500) // 延遲 500 毫秒
+                CoroutineScope(Dispatchers.Main).launch {
+                    val completionRequest = CompletionRequest(
+                        model = ModelId("text-davinci-002"),
+                        prompt = recognizedText,
+                        maxTokens = 50
+                    )
+                    val completion = openAI.completion(completionRequest)
+                    val answer = completion.choices.firstOrNull()?.text?.trim()
+
+                    if (answer != null) {
+                        val answerTextView = findViewById<TextView>(R.id.text_answer)
+                        answerTextView.text = "答: $answer"
+
+                        binding.text.postDelayed({
+                            textToSpeech.speak(answer, TextToSpeech.QUEUE_FLUSH, null, null)
+                        }, 1000)
+                    } else {
+                        binding.textAnswer.text = "抱歉，我無法回答您的問題。"
+                    }
+                }
             }
         }
     }
 
     override fun onDestroy() {
-        // 釋放資源
         if (::textToSpeech.isInitialized) {
             textToSpeech.stop()
             textToSpeech.shutdown()
         }
-
         super.onDestroy()
     }
 }

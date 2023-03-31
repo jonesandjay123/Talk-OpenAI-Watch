@@ -12,7 +12,7 @@ android {
         minSdk 30
         targetSdk 33
         versionCode 1
-        versionName "1.0143"
+        versionName "1.0144"
 
     }
 
@@ -28,6 +28,14 @@ android {
 }
 
 dependencies {
+    // import Kotlin API client BOM
+    implementation platform('com.aallam.openai:openai-client-bom:3.2.0')
+
+    // define dependencies without versions
+    implementation 'com.aallam.openai:openai-client'
+    implementation 'io.ktor:ktor-client-okhttp'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0-RC3'
+
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'com.google.android.gms:play-services-wearable:18.0.0'
     implementation 'androidx.percentlayout:percentlayout:1.0.0'
