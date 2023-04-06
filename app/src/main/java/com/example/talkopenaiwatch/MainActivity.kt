@@ -98,7 +98,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
                 CoroutineScope(Dispatchers.Main).launch {
                     val maxTokens = 50
-                    val systemMessage = if (locale == Locale.TAIWAN) "你是一個智能問答助手，嚴格的遵守規則，每次僅用 $maxTokens 個字來精簡回答所有問題。" else "You are an intelligent Q&A assistant that strictly follows rules, answering all questions concisely using only $maxTokens words each time."
+                    val systemMessage = if (locale == Locale.TAIWAN) "你是一個用字精簡的智能問答助手，嚴格的遵守規則字數限制規則，每次僅用${maxTokens-4}個字來簡短回答所有提問。" else "You are an intelligent Q&A assistant that strictly follows rules, answering all questions concisely using only $maxTokens words each time."
 
                     val chatMessages = listOf(
                         ChatMessage(role = ChatRole.System, content = systemMessage),
