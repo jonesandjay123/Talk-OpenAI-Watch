@@ -3,6 +3,7 @@ package com.example.talkopenaiwatch
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.util.Log
@@ -17,6 +18,7 @@ import com.example.talkopenaiwatch.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 import java.util.Locale
 import java.util.Properties
 
@@ -87,6 +89,20 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
                 binding.text.text = "問：$recognizedText"
 
+                val answerTextView = findViewById<TextView>(R.id.text_answer)
+                val startTime = System.currentTimeMillis()
+                val timer = object : CountDownTimer(60000, 1000) {
+                    override fun onTick(millisUntilFinished: Long) {
+                        val elapsedTime = System.currentTimeMillis() - startTime
+                        val seconds = TimeUnit.MILLISECONDS.toSeconds(elapsedTime)
+                        answerTextView.text = "等待回答：$seconds 秒"
+                    }
+                    override fun onFinish() {
+                        answerTextView.text = "等待時間已超過一分鐘..."
+                    }
+                }
+                timer.start()
+
                 val locale = when {
                     recognizedText.matches(Regex("[\\u4E00-\\u9FA5]+")) -> Locale.TAIWAN
                     else -> Locale.US
@@ -97,8 +113,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 val openAI = OpenAI(apiKey)
 
                 CoroutineScope(Dispatchers.Main).launch {
-                    val maxTokens = 50
-                    val systemMessage = if (locale == Locale.TAIWAN) "你是一個用字精簡的智能問答助手，嚴格的遵守規則字數限制規則，每次僅用${maxTokens-4}個字來簡短回答所有提問。" else "You are an intelligent Q&A assistant that strictly follows rules, answering all questions concisely using only $maxTokens words each time."
+                    val maxTokens = 75
+                    val systemMessage = if (locale == Locale.TAIWAN) "你是一個用字精簡的智能問答助手，嚴格的遵守規則字數限制規則，每次最多僅用${maxTokens+10}個字來簡短回答所有提問。" else "You are an intelligent Q&A assistant that strictly follows rules, answering all questions concisely using only $maxTokens words each time."
 
                     val chatMessages = listOf(
                         ChatMessage(role = ChatRole.System, content = systemMessage),
@@ -116,6 +132,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                     if (answer != null) {
                         val answerTextView = findViewById<TextView>(R.id.text_answer)
                         answerTextView.text = "答: $answer"
+                        timer.cancel()
                         textToSpeech.speak(answer, TextToSpeech.QUEUE_FLUSH, null, null)
                     } else {
                         binding.textAnswer.text = "抱歉，我無法回答您的問題。"
