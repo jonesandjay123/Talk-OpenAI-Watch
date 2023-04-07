@@ -7,6 +7,7 @@ import android.os.CountDownTimer
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.util.Log
+import android.widget.SeekBar
 import android.widget.TextView
 import com.aallam.openai.api.BetaOpenAI
 import com.aallam.openai.api.chat.ChatCompletionRequest
@@ -26,6 +27,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var textToSpeech: TextToSpeech
+    private var maxTokens = 75
 
     private fun readApiSecrets(): String {
         return try {
@@ -49,6 +51,26 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
         // 初始化 textToSpeech
         textToSpeech = TextToSpeech(this, this)
+
+        val seekBar = findViewById<SeekBar>(R.id.seekBar)
+        val tokenMaxText = findViewById<TextView>(R.id.token_max_text)
+        seekBar.max = 190 // 最大值 - 最小值
+        seekBar.progress = 50 // 初始值 - 最小值
+        tokenMaxText.text = "token上限: ${seekBar.progress + 10}" // 初始顯示
+
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                val selectedValue = ((progress + 10) / 5) * 5 // 最小值 + progress，並確保它是5的倍數
+                tokenMaxText.text = "token上限: $selectedValue" // 更新顯示
+                maxTokens = selectedValue // 調整maxTokens的值
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+                // 可選操作：當用戶開始拖動 SeekBar 時觸發
+            }
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+                // 可選操作：當用戶停止拖動 SeekBar 時觸發
+            }
+        })
 
         val versionTextView = findViewById<TextView>(R.id.version_text)
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
@@ -113,8 +135,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 val openAI = OpenAI(apiKey)
 
                 CoroutineScope(Dispatchers.Main).launch {
-                    val maxTokens = 75
-                    val systemMessage = if (locale == Locale.TAIWAN) "你是一個用字精簡的智能問答助手，嚴格的遵守規則字數限制規則，每次最多僅用${maxTokens+10}個字來簡短回答所有提問。" else "You are an intelligent Q&A assistant that strictly follows rules, answering all questions concisely using only $maxTokens words each time."
+                    val systemMessage = if (locale == Locale.TAIWAN) "你是一個用字精簡的智能問答助手，嚴格的遵守規則字數限制規則，每次最多僅用${maxTokens}個字來簡短回答所有提問。" else "You are an intelligent Q&A assistant that strictly follows rules, answering all questions concisely using only $maxTokens words each time."
 
                     val chatMessages = listOf(
                         ChatMessage(role = ChatRole.System, content = systemMessage),
