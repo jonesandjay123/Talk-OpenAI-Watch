@@ -45,15 +45,14 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    private fun initializeVersionTextView() {
+        val versionTextView = findViewById<TextView>(R.id.version_text)
+        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        val versionName = packageInfo.versionName
+        versionTextView.text = "Version $versionName"
+    }
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        // 初始化 textToSpeech
-        textToSpeech = TextToSpeech(this, this)
-
+    private fun initializeSeekBar() {
         val seekBar = findViewById<SeekBar>(R.id.seekBar)
         val tokenMaxText = findViewById<TextView>(R.id.token_max_text)
         seekBar.max = 190 // 最大值 - 最小值
@@ -73,19 +72,23 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 // 可選操作：當用戶停止拖動 SeekBar 時觸發
             }
         })
+    }
 
-        val versionTextView = findViewById<TextView>(R.id.version_text)
-        val packageInfo = packageManager.getPackageInfo(packageName, 0)
-        val versionName = packageInfo.versionName
-        versionTextView.text = "Version $versionName"
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // 初始化 textToSpeech
+        textToSpeech = TextToSpeech(this, this)
+
+        initializeVersionTextView()
+        initializeSeekBar()
 
         // 修改按鈕的點擊事件
         binding.buttonAsk.setOnClickListener {
-            if (isPlaying) {
-                onStopSpeaking()
-            } else {
-                onAskButtonClicked()
-            }
+            if (isPlaying) onStopSpeaking() else onAskButtonClicked()
         }
     }
 
@@ -136,6 +139,13 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
     }
 
+    private fun determineLocale(text: String): Locale {
+        return when {
+            text.matches(Regex("[\\u4E00-\\u9FA5]+")) -> Locale.TAIWAN
+            else -> Locale.US
+        }
+    }
+
     @OptIn(BetaOpenAI::class)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -161,10 +171,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 }
                 timer.start()
 
-                val locale = when {
-                    recognizedText.matches(Regex("[\\u4E00-\\u9FA5]+")) -> Locale.TAIWAN
-                    else -> Locale.US
-                }
+                val locale = determineLocale(recognizedText)
                 textToSpeech.language = locale
 
                 val apiKey = readApiSecrets()
