@@ -114,7 +114,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             textToSpeech.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                 override fun onStart(utteranceId: String?) {
                     runOnUiThread {
-                        binding.buttonAsk.text = "停止回答"
+                        binding.buttonAsk.text = "停止朗讀"
                         isPlaying = true
                     }
                 }
