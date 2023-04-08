@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import android.widget.SeekBar
 import android.widget.TextView
@@ -28,6 +29,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private lateinit var binding: ActivityMainBinding
     private lateinit var textToSpeech: TextToSpeech
     private var maxTokens = 75
+    private var isPlaying = false // 新增此變量
 
     private fun readApiSecrets(): String {
         return try {
@@ -77,7 +79,14 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         val versionName = packageInfo.versionName
         versionTextView.text = "Version $versionName"
 
-        binding.buttonAsk.setOnClickListener { onAskButtonClicked() }
+        // 修改按鈕的點擊事件
+        binding.buttonAsk.setOnClickListener {
+            if (isPlaying) {
+                onStopSpeaking()
+            } else {
+                onAskButtonClicked()
+            }
+        }
     }
 
     private fun onAskButtonClicked() {
@@ -89,12 +98,39 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         startActivityForResult(intent, 100)
     }
 
+    // 新增 onStopSpeaking() 方法
+    private fun onStopSpeaking() {
+        textToSpeech.stop()
+        binding.buttonAsk.text = "點擊開始提問"
+        isPlaying = false
+    }
+
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             val result = textToSpeech.setLanguage(Locale.US)
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                 Log.e("TextToSpeech", "Language not supported")
             }
+            textToSpeech.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                override fun onStart(utteranceId: String?) {
+                    runOnUiThread {
+                        binding.buttonAsk.text = "停止回答"
+                        isPlaying = true
+                    }
+                }
+                override fun onDone(utteranceId: String?) {
+                    runOnUiThread {
+                        binding.buttonAsk.text = "點擊開始提問"
+                        isPlaying = false
+                    }
+                }
+                override fun onError(utteranceId: String?) {
+                    runOnUiThread {
+                        binding.buttonAsk.text = "點擊開始提問"
+                        isPlaying = false
+                    }
+                }
+            })
         } else {
             Log.e("TextToSpeech", "Initialization failed")
         }
@@ -154,7 +190,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                         val answerTextView = findViewById<TextView>(R.id.text_answer)
                         answerTextView.text = "答: $answer"
                         timer.cancel()
-                        textToSpeech.speak(answer, TextToSpeech.QUEUE_FLUSH, null, null)
+                        textToSpeech.speak(answer, TextToSpeech.QUEUE_FLUSH, null, "utteranceId")
                     } else {
                         binding.textAnswer.text = "抱歉，我無法回答您的問題。"
                     }
